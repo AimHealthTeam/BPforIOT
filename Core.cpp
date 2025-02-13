@@ -9,6 +9,7 @@
 #include <tuple>
 #include <exception>
 #include "Core.h"
+#include "cavity.h"
 
 using namespace std;
 
@@ -16,8 +17,6 @@ template<class T>
 void cumulativeSum(Message<T> & message, int startIdx, int endIdx)
 {
     T result = message(0, 0);
-    for (int rowIdx = message.size() - 2; rowIdx >= endIdx; --rowIdx)
-        message(message.size() - 1, rowIdx) += message(message.size() - 1, rowIdx + 1);
     for (int colIdx = message.size() - 2; colIdx >= startIdx; --colIdx) {
         result = message(colIdx, message.size() - 1);
         message(colIdx, message.size() - 1) += message(colIdx + 1, message.size() - 1);
@@ -26,8 +25,10 @@ void cumulativeSum(Message<T> & message, int startIdx, int endIdx)
             message(colIdx, rowIdx) = result + message(colIdx + 1, rowIdx);
         }
     }
+    for (int rowIdx = message.size() - 2; rowIdx >= endIdx; --rowIdx)
+        message(message.size() - 1, rowIdx) += message(message.size() - 1, rowIdx + 1);
 }
-int const InfiniteTime = 1000000;
+
 void FactorGraph::addTime(int nodeIdx, times_t timePoint)
 {
     addNode(nodeIdx);
@@ -36,7 +37,7 @@ void FactorGraph::addTime(int nodeIdx, times_t timePoint)
         || timePoint == *lower_bound(node.times.begin(), node.times.end(), timePoint))
         return;
     if (timePoint > node.times[node.times.size() - 2]) {
-        node.push_backTime(timePoint);
+        node.pushBackTime(timePoint);
         for (int j = 0; j < int(node.neighbors.size()); ++j) {
             node.neighbors[j].time.back() = node.times.size() - 1;
         }
@@ -61,8 +62,8 @@ Message & operator++(Message & msg)
     int newSize = msg.size;
     msg.resize(msg.size * msg.size);
 
-    for (int rowIdx = oldSize - 1; rowIdx >= 0; --rowIdx) {
-        for (int colIdx = oldSize - 1; colIdx >= 0; --colIdx) {
+    for (int colIdx = oldSize - 1; colIdx >= 0; --colIdx) {
+        for (int rowIdx = oldSize - 1; rowIdx >= 0; --rowIdx) {
             msg(rowIdx, colIdx) = msg[oldSize * colIdx + rowIdx];
         }
     }
@@ -78,9 +79,9 @@ Message & operator--(Message & msg)
 {
     int size = msg.size;
     msg.size--;
-    for (int rowIdx = 0; rowIdx < size - 1; ++rowIdx) {
-        for (int colIdx = 0; colIdx < size - 1; ++colIdx) {
-            msg(colIdx, rowIdx) = msg[size * (rowIdx + 1) + (colIdx + 1)];
+    for (int colIdx = 0; colIdx < size - 1; ++colIdx) {
+        for (int rowIdx = 0; rowIdx < size - 1; ++rowIdx) {
+            msg(rowIdx, colIdx) = msg[size * (rowIdx + 1) + (colIdx + 1)];
         }
     }
     msg.resize(msg.size * msg.size);
@@ -103,7 +104,8 @@ void FactorGraph::removeContacts(times_t timePoint)
     }
 }
 
-void FactorGraph::checkIfNeighbors(int node1Idx, int node2Idx){
+void FactorGraph::checkIfNeighbors(int node1Idx, int node2Idx)
+{
     if (node1Idx == node2Idx)
         throw invalid_argument("self loops are not allowed");
     addNode(node1Idx);
@@ -128,7 +130,7 @@ void FactorGraph::addSingleContact(int node1Idx, int node2Idx, times_t timePoint
     int neighborIdx1 = findNeighbor(node1Idx, node2Idx);
     Neighbor & neighbor1 = node1.neighbors[neighborIdx1];
     if (node1.times[node1TimeSize - 2] < timePoint) {
-        node1.push_backTime(timePoint);
+        node1.pushBackTime(timePoint);
         ++node1TimeSize;
     }
     if (neighbor1.time.size() < 2 || neighbor1.time[neighbor1.time.size() - 2] < node1TimeSize - 2) {
@@ -174,11 +176,11 @@ void FactorGraph::addContact(int node1Idx, int node2Idx, times_t timePoint, real
     Neighbor & neighbor2 = node2.neighbors[neighborIdx2];
 
     if (node1.times[node1TimeSize - 2] < timePoint) {
-        node1.push_backTime(timePoint);
+        node1.pushBackTime(timePoint);
         ++node1TimeSize;
     }
     if (node2.times[node2TimeSize - 2] < timePoint) {
-        node2.push_backTime(timePoint);
+        node2.pushBackTime(timePoint);
         ++node2TimeSize;
     }
 
