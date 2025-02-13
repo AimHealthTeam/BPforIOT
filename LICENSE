@@ -186,8 +186,12 @@
       same "printed page" as the copyright notice for easier
       identification within third-party archives.
 
-   Copyright [yyyy] [name of copyright owner]
+   Copyright 2020 Biazzo Indaco, Braunstein Alfredo, Ingrosso Alessandro, Muntoni Anna Paola
+   Copyright 2025 Yangcheng Liu
 
+   This project is based on the code from sir_inference, which is licensed under the Apache License 2.0.
+   Modifications were made by Yangcheng Liu, and the modified code is also licensed under the Apache License 2.0.
+   
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
